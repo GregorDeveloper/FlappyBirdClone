@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import java.util.Random;
 
+import jdk.internal.net.http.common.Log;
+
 public class FlappyBird extends ApplicationAdapter {
 	SpriteBatch batch;
 	Texture background;
@@ -20,11 +22,15 @@ public class FlappyBird extends ApplicationAdapter {
 	float flyHeight;
 	float fallingSpeed = 0;
 	int gameStateFlag = 0;
-	int spaceBetweenTubes = 500;
-	float tubeShift;
+	int spaceBetweenTubes = 870; // растояние между трубами
+
 	Random random;
-	int tubeSpeed;
-	float tubeX;
+	int tubeSpeed = 5;
+
+	int tubesNumber = 5;
+	float tubeX [];
+	float tubeShift[];
+	float distanceBetweenTubes;
 
 	@Override
 	public void create () {
@@ -38,6 +44,19 @@ public class FlappyBird extends ApplicationAdapter {
 		topTube = new Texture("top_tube.png");
 		bottomTube = new Texture("bottom_tube.png");
 		random = new Random();
+		tubeX = new float[tubesNumber];
+		tubeShift = new float[tubesNumber];
+
+		distanceBetweenTubes = Gdx.graphics.getWidth() / 2; // растояние между трубами
+		for (int i = 0; i < tubesNumber; i++){
+
+			Gdx.app.log("MyLog", "1");
+			tubeX[i] = Gdx.graphics.getWidth() /2 -
+					topTube.getWidth() /2 + i * distanceBetweenTubes;
+			tubeShift[i] = (random.nextFloat() - 0.5f) *
+					(Gdx.graphics.getHeight() - spaceBetweenTubes - 200); //рагдомное число от 0.2 до 0.5
+			Gdx.app.log("MyLog", "2");
+		}
 	}
 
 	@Override
@@ -54,23 +73,32 @@ public class FlappyBird extends ApplicationAdapter {
 
 			if(Gdx.input.justTouched()){
 				fallingSpeed = -30;
-				tubeShift = (random.nextFloat() - 0.5f) *
-						(Gdx.graphics.getHeight() - spaceBetweenTubes - 200); //рагдомное число от 0.2 до 0.5
+
 			}if(flyHeight > 0 || fallingSpeed < 0) {
 				fallingSpeed++;
 				flyHeight -= fallingSpeed;
 			}
-			batch.draw(topTube, Gdx.graphics.getWidth() /2 -
-					topTube.getWidth() /2, Gdx.graphics.getHeight()/2 + spaceBetweenTubes / 2 + tubeShift);
 
-			batch.draw(bottomTube, Gdx.graphics.getWidth() /2 -
-					topTube.getWidth() /2, Gdx.graphics.getHeight()/2 - spaceBetweenTubes / 2
-					- bottomTube.getHeight() + tubeShift);
 		}else{
 			if(Gdx.input.justTouched()){ // метод нажатия по экрану
 				Gdx.app.log("MyLog", "Oops");
 				gameStateFlag = 1;
 			}
+		}
+
+
+		for (int i = 0; i < tubesNumber; i++) {
+
+			if(tubeX[i] < -topTube.getWidth()){
+				tubeX[i] = tubesNumber * distanceBetweenTubes;
+			}else {
+				tubeX[i] -= tubeSpeed;
+			}
+
+			batch.draw(topTube, tubeX[i], Gdx.graphics.getHeight() / 2 + spaceBetweenTubes / 2 + tubeShift[i]);
+
+			batch.draw(bottomTube, tubeX[i], Gdx.graphics.getHeight() / 2 - spaceBetweenTubes / 2
+					- bottomTube.getHeight() + tubeShift[i]);
 		}
 
 		if(birdStateFlag == 0){
@@ -81,8 +109,7 @@ public class FlappyBird extends ApplicationAdapter {
 			birdLocation = 3;
 		}
 
-		batch.begin();
-		batch.draw(background,0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());// установка background
+
 		batch.draw(bird[birdStateFlag], Gdx.graphics.getWidth() /2 -
 						bird[birdStateFlag].getWidth() /2,
 				flyHeight); //отцентровка изображения птицы
